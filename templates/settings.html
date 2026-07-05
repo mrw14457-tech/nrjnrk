@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}الإعدادات{% endblock %}
+{% block topbar %}{% include "_topbar.html" with context %}{% endblock %}
+{% set active='settings' %}
+{% block content %}
+
+<form method="post">
+  <!-- إعدادات عامة -->
+  <div class="card mb">
+    <h2>⚙️ الإعدادات العامة</h2>
+    <div class="form-row">
+      <div>
+        <label>اسمك (يظهر في الرسائل)</label>
+        <input type="text" name="owner_name" value="{{ s.owner_name }}" placeholder="مثال: عمرو">
+      </div>
+      <div>
+        <label>بريدك (تصلك عليه التذكيرات)</label>
+        <input type="email" name="owner_email" value="{{ s.owner_email }}" placeholder="you@gmail.com">
+      </div>
+    </div>
+    <div class="form-row">
+      <div>
+        <label>مدة المهلة (بالأيام)</label>
+        <input type="number" name="deadline_days" min="1" value="{{ s.deadline_days }}">
+        <p class="hint">عدد أيام الصمت قبل تنفيذ الوصية تلقائياً (افتراضي 60).</p>
+      </div>
+      <div>
+        <label>تذكير كل (بالأيام)</label>
+        <input type="number" name="reminder_every_days" min="1" value="{{ s.reminder_every_days }}">
+        <p class="hint">كل كم يوم يصلك رابط «أنا بخير» (افتراضي 7).</p>
+      </div>
+    </div>
+    <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+      <input type="checkbox" name="system_active" {{ 'checked' if s.system_active }}
+             style="width:auto;margin:0">
+      النظام مُفعّل (إلغاء التحديد يوقف المراقبة والتنفيذ)
+    </label>
+  </div>
+
+  <!-- إعدادات البريد -->
+  <div class="card mb">
+    <h2>📧 إعدادات البريد (SMTP)</h2>
+    <p class="small mb">
+      استخدم حساب بريد <b>مخصص لهذا الغرض</b> (لا تستخدم حسابك الأصلي).
+      لـ Gmail: فعّل «التحقق بخطوتين» ثم أنشئ «App Password» واستخدمه هنا.
+    </p>
+    <div class="form-row">
+      <div>
+        <label>خادم SMTP</label>
+        <input type="text" name="smtp_host" value="{{ s.smtp_host }}" placeholder="smtp.gmail.com">
+      </div>
+      <div>
+        <label>المنفذ (Port)</label>
+        <input type="number" name="smtp_port" value="{{ s.smtp_port }}" placeholder="465">
+      </div>
+    </div>
+    <div class="form-row">
+      <div>
+        <label>بريد المرسِل</label>
+        <input type="email" name="email_address" value="{{ s.email_address }}" placeholder="yourbot@gmail.com">
+      </div>
+      <div>
+        <label>كلمة مرور التطبيق (App Password)</label>
+        <input type="password" name="email_password"
+               placeholder="{{ '•••••••• (محفوظة)' if s.email_password_enc else 'أدخل كلمة المرور' }}">
+        <p class="hint">اتركها فارغة للاحتفاظ بالكلمة المحفوظة.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- محتوى الوصية -->
+  <div class="card mb">
+    <h2>📜 محتوى الوصية</h2>
+    <label>عنوان الرسالة</label>
+    <input type="text" name="final_subject" value="{{ s.final_subject }}" placeholder="رسالة مهمة">
+
+    <label>رابط الفيديو</label>
+    <input type="url" name="video_url" value="{{ s.video_url }}"
+           placeholder="https://... (يوتيوب / درايف / أي رابط)">
+
+    <label>نص الرسالة</label>
+    <textarea name="final_message" placeholder="اكتب الرسالة التي ستصل للمستلمين...">{{ s.final_message }}</textarea>
+    <p class="hint">سيُضاف رابط الفيديو تلقائياً في نهاية الرسالة عند الإرسال.</p>
+  </div>
+
+  <button class="btn btn-primary btn-lg btn-block mb" type="submit">💾 حفظ الإعدادات</button>
+</form>
+
+<!-- اختبار البريد -->
+<div class="card mb">
+  <h2>🧪 اختبار البريد</h2>
+  <p class="small mb">يتحقق من الاتصال بخادم البريد ويرسل رسالة اختبار إلى بريدك.</p>
+  <form method="post" action="{{ url_for('test_email') }}">
+    <button class="btn btn-ghost">📨 إرسال رسالة اختبار</button>
+  </form>
+</div>
+
+<!-- تغيير كلمة المرور -->
+<div class="card danger-zone">
+  <h2>🔒 تغيير كلمة مرور اللوحة</h2>
+  <form method="post" action="{{ url_for('change_password') }}">
+    <div class="form-row">
+      <div>
+        <label>كلمة المرور الحالية</label>
+        <input type="password" name="current_password" required>
+      </div>
+      <div>
+        <label>كلمة المرور الجديدة</label>
+        <input type="password" name="new_password" required>
+      </div>
+    </div>
+    <button class="btn btn-red">تغيير كلمة المرور</button>
+  </form>
+</div>
+
+{% endblock %}
