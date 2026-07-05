@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}تسجيل الدخول{% endblock %}
+{% block content %}
+<div class="login-wrap">
+  <div class="login-box">
+    <div class="icon">🔐</div>
+    <div class="card">
+      <h2 style="justify-content:center">لوحة تحكم الوصية الرقمية</h2>
+      <p class="small" style="text-align:center;margin-bottom:20px">
+        أدخل كلمة المرور للوصول إلى النظام
+      </p>
+      <form method="post">
+        <label>كلمة المرور</label>
+        <input type="password" name="password" autofocus required placeholder="••••••••">
+        <button class="btn btn-primary btn-block btn-lg" type="submit">دخول</button>
+      </form>
+    </div>
+    <p class="small" style="text-align:center;margin-top:16px">
+      المصمم الوحيد: عمرو
+    </p>
+  </div>
+</div>
+{% endblock %}

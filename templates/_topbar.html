@@ -1,0 +1,12 @@
+<div class="topbar">
+  <div class="brand">
+    <span class="dot"></span>
+    <span>🕊️ الوصية الرقمية</span>
+  </div>
+  <div class="nav">
+    <a href="{{ url_for('dashboard') }}" class="{{ 'active' if active=='home' }}">الرئيسية</a>
+    <a href="{{ url_for('settings_page') }}" class="{{ 'active' if active=='settings' }}">الإعدادات</a>
+    <a href="{{ url_for('logs_page') }}" class="{{ 'active' if active=='logs' }}">السجل</a>
+    <a href="{{ url_for('logout') }}">خروج</a>
+  </div>
+</div>

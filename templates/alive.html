@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}تأكيد النشاط{% endblock %}
+{% block content %}
+<div class="login-wrap">
+  <div class="login-box" style="text-align:center">
+    {% if ok %}
+      <div class="card">
+        <div style="font-size:72px">✅</div>
+        <h2 style="justify-content:center;color:var(--green)">تم تسجيل دخولك بنجاح</h2>
+        <p class="mt">أنت بخير، وتم إعادة ضبط المؤقّت.</p>
+        <p class="small mt">تم تمديد المهلة {{ days }} يوماً من الآن.</p>
+      </div>
+    {% else %}
+      <div class="card">
+        <div style="font-size:72px">❌</div>
+        <h2 style="justify-content:center;color:var(--red)">رابط غير صالح</h2>
+        <p class="mt small">الرابط الذي استخدمته غير صحيح أو منتهي الصلاحية.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+# بيانات حساسة — لا تُرفع أبداً
+data/app.db
+data/encryption.key
+*.log
+server.log
+cookies.txt
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+.env
+
+# نظام
+.DS_Store

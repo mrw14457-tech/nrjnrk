@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}لوحة التحكم{% endblock %}
+{% block topbar %}{% include "_topbar.html" with context %}{% endblock %}
+{% set active='home' %}
+{% block content %}
+
+{% if s.will_executed %}
+  <div class="flash flash-error">
+    ⚠️ تم تنفيذ الوصية بالفعل بتاريخ {{ s.executed_at.strftime('%Y-%m-%d %H:%M') if s.executed_at }}.
+    النظام متوقف عن التنفيذ. يمكنك إعادة تفعيله من قسم الإجراءات بالأسفل.
+  </div>
+{% elif not s.system_active %}
+  <div class="flash flash-error">⏸️ النظام متوقف مؤقتاً. فعّله من صفحة الإعدادات.</div>
+{% endif %}
+
+<!-- الحالة الرئيسية -->
+{% set rem = s.days_remaining %}
+{% set cls = 'status-ok' if rem > 14 else ('status-warn' if rem > 3 else 'status-danger') %}
+<div class="hero mb">
+  <div class="label">المهلة المتبقية قبل تنفيذ الوصية</div>
+  <div class="big {{ cls }}">{{ rem if rem > 0 else 0 }}</div>
+  <div class="label">يوم</div>
+  <p class="small mt">
+    آخر تسجيل حياة: {{ s.last_checkin.strftime('%Y-%m-%d %H:%M') }} —
+    موعد التنفيذ: {{ s.deadline_date.strftime('%Y-%m-%d') }}
+  </p>
+  <form method="post" action="{{ url_for('checkin') }}" class="mt">
+    <button class="btn btn-green btn-lg" type="submit">✅ أنا بخير — أعِد ضبط المؤقّت</button>
+  </form>
+</div>
+
+<div class="grid grid-3 mb">
+  <div class="stat"><div class="n">{{ s.deadline_days }}</div><div class="t">مدة المهلة (يوم)</div></div>
+  <div class="stat"><div class="n">{{ s.reminder_every_days }}</div><div class="t">تذكير كل (يوم)</div></div>
+  <div class="stat"><div class="n">{{ recipients|selectattr('active')|list|length }}</div><div class="t">مستلم مُفعّل</div></div>
+</div>
+
+<div class="grid grid-2">
+  <!-- المستلمون -->
+  <div class="card">
+    <h2>👥 المستلمون</h2>
+    <p class="small mb">من ستصلهم الوصية عند انتهاء المهلة.</p>
+    <form method="post" action="{{ url_for('add_recipient') }}">
+      <div class="form-row">
+        <input type="text" name="name" placeholder="الاسم (اختياري)">
+        <input type="email" name="email" placeholder="البريد الإلكتروني" required>
+      </div>
+      <button class="btn btn-primary btn-block" type="submit">➕ إضافة مستلم</button>
+    </form>
+    <div class="divider"></div>
+    {% if recipients %}
+    <table>
+      <thead><tr><th>الاسم</th><th>البريد</th><th>الحالة</th><th></th></tr></thead>
+      <tbody>
+      {% for r in recipients %}
+        <tr>
+          <td>{{ r.name or '—' }}</td>
+          <td class="small" style="direction:ltr;text-align:left">{{ r.email }}</td>
+          <td>
+            {% if r.active %}<span class="badge badge-green">مُفعّل</span>
+            {% else %}<span class="badge badge-gray">متوقف</span>{% endif %}
+          </td>
+          <td style="white-space:nowrap">
+            <form method="post" action="{{ url_for('toggle_recipient', rid=r.id) }}" style="display:inline">
+              <button class="btn btn-ghost btn-sm" title="تفعيل/إيقاف">🔄</button>
+            </form>
+            <form method="post" action="{{ url_for('delete_recipient', rid=r.id) }}" style="display:inline"
+                  onsubmit="return confirm('حذف هذا المستلم؟')">
+              <button class="btn btn-red btn-sm">🗑️</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p class="small">لا يوجد مستلمون بعد. أضف واحداً على الأقل.</p>
+    {% endif %}
+  </div>
+
+  <!-- رابط التحقق + السجل -->
+  <div class="card">
+    <h2>🔗 رابط التحقق السري</h2>
+    <p class="small mb">
+      هذا الرابط يصلك بالإيميل دورياً. اضغطه لتأكيد أنك بخير دون الحاجة لتسجيل الدخول.
+    </p>
+    <div class="secret-box">{{ checkin_url }}</div>
+    <button class="btn btn-ghost btn-sm mt" onclick="copyLink()">📋 نسخ الرابط</button>
+
+    <div class="divider"></div>
+    <h2>📋 آخر الأحداث</h2>
+    {% if logs %}
+      <table>
+        <tbody>
+        {% for l in logs %}
+          <tr>
+            <td style="width:40%"><span class="badge badge-primary">{{ l.event_type }}</span></td>
+            <td class="small">{{ l.message }}<br>
+              <span style="color:#64748b">{{ l.created_at.strftime('%m-%d %H:%M') }}</span>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      <a href="{{ url_for('logs_page') }}" class="btn btn-ghost btn-sm mt">عرض السجل الكامل</a>
+    {% else %}
+      <p class="small">لا توجد أحداث بعد.</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- الإجراءات والاختبار -->
+<div class="card mt danger-zone">
+  <h2>🧪 أدوات الاختبار والإجراءات</h2>
+  <div class="grid grid-3">
+    <div>
+      <h3>تشغيل الفحص الآن</h3>
+      <p class="small mb">يشغّل منطق المجدول فوراً (تذكير/تنفيذ حسب الحالة).</p>
+      <form method="post" action="{{ url_for('run_check') }}">
+        <button class="btn btn-ghost btn-block">▶️ فحص الآن</button>
+      </form>
+    </div>
+    <div>
+      <h3>تنفيذ فوري (اختبار)</h3>
+      <p class="small mb">يرسل الوصية للمستلمين حالاً. اكتب «تنفيذ» للتأكيد.</p>
+      <form method="post" action="{{ url_for('force_execute') }}"
+            onsubmit="return confirm('سيتم إرسال الوصية لجميع المستلمين الآن. متأكد؟')">
+        <input type="text" name="confirm" placeholder="اكتب: تنفيذ" style="margin-bottom:8px">
+        <button class="btn btn-red btn-block">⚡ تنفيذ الآن</button>
+      </form>
+    </div>
+    <div>
+      <h3>إعادة تفعيل</h3>
+      <p class="small mb">يعيد ضبط المؤقّت ويلغي حالة «تم التنفيذ».</p>
+      <form method="post" action="{{ url_for('reset_will') }}">
+        <button class="btn btn-green btn-block">🔄 إعادة تفعيل</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function copyLink(){
+  const t = "{{ checkin_url }}";
+  navigator.clipboard.writeText(t).then(()=>{ alert('تم نسخ الرابط ✅'); });
+}
+</script>
+{% endblock %}

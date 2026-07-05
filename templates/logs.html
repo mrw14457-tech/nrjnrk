@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}السجل{% endblock %}
+{% block topbar %}{% include "_topbar.html" with context %}{% endblock %}
+{% set active='logs' %}
+{% block content %}
+<div class="card">
+  <h2>📋 سجل الأحداث الكامل</h2>
+  <p class="small mb">آخر 200 حدث في النظام.</p>
+  {% if logs %}
+  <table>
+    <thead><tr><th>النوع</th><th>التفاصيل</th><th>الوقت</th></tr></thead>
+    <tbody>
+    {% for l in logs %}
+      {% set c = 'badge-primary' %}
+      {% if l.event_type == 'error' %}{% set c = 'badge-red' %}
+      {% elif l.event_type in ['checkin','execute'] %}{% set c = 'badge-green' %}
+      {% elif l.event_type == 'reminder' %}{% set c = 'badge-amber' %}{% endif %}
+      <tr>
+        <td><span class="badge {{ c }}">{{ l.event_type }}</span></td>
+        <td>{{ l.message }}</td>
+        <td class="small" style="white-space:nowrap">{{ l.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p class="small">لا توجد أحداث.</p>
+  {% endif %}
+</div>
+{% endblock %}
